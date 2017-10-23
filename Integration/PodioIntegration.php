@@ -20,6 +20,22 @@ use MauticPlugin\MauticCrmBundle\Integration\CrmAbstractIntegration;
  */
 class PodioIntegration extends CrmAbstractIntegration
 {
+
+    /**
+     * Get the API helper.
+     *
+     * @return object
+     */
+    public function getApiHelper()
+    {
+        if (empty($this->helper)) {
+            $class        = '\\MauticPlugin\\PodioCrmBundle\\Api\\'.$this->getName().'Api';
+            $this->helper = new $class($this);
+        }
+
+        return $this->helper;
+    }
+
     /**
      * @return \Doctrine\ORM\EntityManager
      */
