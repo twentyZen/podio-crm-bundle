@@ -247,6 +247,24 @@ class PodioIntegration extends CrmAbstractIntegration
         }
 
         if ($formArea == 'features') {
+
+            $builder->add(
+                'objects',
+                'choice',
+                [
+                    'choices' => [
+                        'contacts' => 'mautic.podio.object.contact',
+                        'company'  => 'mautic.podio.object.company',
+                    ],
+                    'expanded'    => true,
+                    'multiple'    => true,
+                    'label'       => $this->getTranslator()->trans('mautic.crm.form.objects_to_pull_from', ['%crm%' => 'Podio']),
+                    'label_attr'  => ['class' => ''],
+                    'empty_value' => false,
+                    'required'    => false,
+                ]
+            );
+
             $builder->add(
                 'synchronization_tag',
                 'text',
