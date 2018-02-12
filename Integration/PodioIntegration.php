@@ -279,7 +279,7 @@ class PodioIntegration extends CrmAbstractIntegration
                 'contact_field_external_id',
                 'text',
                 [
-                    'label'      => 'mautic.podio.app.contac_field',
+                    'label'      => 'mautic.podio.app.contact_field_external_id',
                     'label_attr' => ['class' => 'control-label'],
                     'attr'       => ['class' => 'form-control'],
                     'required'   => false,
@@ -289,7 +289,7 @@ class PodioIntegration extends CrmAbstractIntegration
                 'company_field_external_id',
                 'text',
                 [
-                    'label'      => 'mautic.podio.app.company_field',
+                    'label'      => 'mautic.podio.app.company_field_external_id',
                     'label_attr' => ['class' => 'control-label'],
                     'attr'       => ['class' => 'form-control'],
                     'required'   => false,
@@ -568,7 +568,7 @@ class PodioIntegration extends CrmAbstractIntegration
             if (isset($leadFields[$integrationKey])) {
                 $mauticKey = $leadFields[$integrationKey];
                 if (isset($fields[$mauticKey]) && ! empty($fields[$mauticKey])) {
-                    $matched[$integrationKey]['value'] = strval($fields[$mauticKey]);
+                    $matched[$integrationKey]['value'] = strval($fields[$mauticKey]['value']);
                     if ($mauticKey === 'email') {
                         $matched[$integrationKey]['type'] = 'other';
                     }
