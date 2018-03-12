@@ -1,0 +1,15 @@
+{
+    "name": "twentyzen/podio-crm-bundle",
+    "description": "Podio integration for Mautic",
+    "type": "mautic-plugin",
+    "require": {
+        "mautic/composer-plugin": "*"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Robert Juzak",
+            "email": "robert.juzak@twentyzen.com"
+        }
+    ]
+}
