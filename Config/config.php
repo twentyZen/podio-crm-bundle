@@ -12,6 +12,15 @@
 return [
     'name'        => 'Podio as CRM',
     'description' => 'Podio as CRM',
-    'version'     => '0.2.3',
+    'version'     => '0.3.0',
     'author'      => 'robjuz',
+    'services'    => [
+        'forms' => [
+            'mautic.form.type.integration.fiead.fields' => [
+                'class'     => 'MauticPlugin\PodioCrmBundle\LeadFieldsType',
+                'alias'     => 'integration_lied_fields',
+                'arguments' => 'translator',
+            ],
+        ]
+    ]
 ];

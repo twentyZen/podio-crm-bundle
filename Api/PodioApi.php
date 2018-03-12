@@ -24,14 +24,14 @@ class PodioApi extends CrmApi
     {
         if ($object == 'company') {
             $appId = $this->integration->getCompaniesAppId();
-        } else if ($object == 'contacts') {
-            $appId = $this->integration->getContactsAppId();
         } else {
-            $appId = $this->integration->getLeadsAppId();
+            $appId = $this->integration->getContactsAppId();
         }
+
         $request = $this->integration->makeRequest(
             sprintf('%s/app/%s', $this->integration->getApiUrl(), $appId)
         );
+
         if (isset($request['status']) && $request['status'] == 'error') {
             throw new ApiErrorException($request['message']);
         }
@@ -46,80 +46,13 @@ class PodioApi extends CrmApi
         return $fields;
     }
 
-    public function createLead(array $data, $lead, $config = [])
+    public function createLead(array $data, $lead)
     {
-        $companyRepository = $this->integration->getEm()->getRepository('MauticLeadBundle:Company');
-
-        $result = [];
-        //Format data for request
-        $leadData[$this->integration->getContactFieldId()] = $this->updateOrCreateItem(
+        return $this->updateOrCreateItem(
             $this->integration->getContactsAppId(),
             $data,
             $lead
         );
-
-        if ($companies = $companyRepository->getCompaniesByLeadId($lead->getId())) {
-            foreach ($companies as $company) {
-                $config['object'] = 'company';
-
-                $leadData[$this->integration->getCompanyFieldId()][] = $this->updateOrCreateItem(
-                    $this->integration->getCompaniesAppId(),
-                    $this->integration->populateCompanyData($company, $config),
-                    $company
-                );
-            }
-        }
-
-        $formattedLeadData = $this->integration->formatLeadDataForCreateOrUpdate($leadData, $lead);
-
-        if ($formattedLeadData) {
-            $result = $this->integration->makeRequest(
-                sprintf('%s/item/app/%s/', $this->integration->getApiUrl(), $this->integration->getLeadsAppId()),
-                $formattedLeadData,
-                'POST',
-                ['encode_parameters' => 'json']
-            );
-        }
-
-        return !empty($result['item_id']);
-    }
-
-    public function createContact(array $data, $lead)
-    {
-        $appId = $this->integration->getLeadsAppId();
-
-        $getResult = $this->integration->makeRequest(
-            sprintf('%s/item/app/%s/external_id/%s/', $this->integration->getApiUrl(), $appId, $lead->getId())
-        );
-
-        $formattedLeadData = $this->integration->formatLeadDataForCreateOrUpdate($data, $lead);
-
-        if ( ! empty($getResult['item_id'])) {
-            $itemId = $getResult['item_id'];
-            $this->integration->makeRequest(
-                sprintf('%s/item/%s/', $this->integration->getApiUrl(), $itemId),
-                $formattedLeadData,
-                'PUT',
-                ['encode_parameters' => 'json']
-            );
-
-            return $itemId;
-        } else {
-            $postResult = $this->integration->makeRequest(
-                sprintf('%s/item/app/%s/', $this->integration->getApiUrl(), $appId),
-                $formattedLeadData,
-                'POST',
-                ['encode_parameters' => 'json']
-            );
-
-            return $postResult['item_id'];
-        }
-    }
-
-
-    public function getLeads($params = [])
-    {
-        return [];
     }
 
     /**
@@ -131,13 +64,9 @@ class PodioApi extends CrmApi
      */
     public function getContacts($params = [])
     {
-        $appId = $this->integration->getContactsAppId();
-
-        $params['tags'] = $this->integration->getSynchronizationTag();
-
         $result = $this->integration->makeRequest(
-            sprintf('%s/item/app/%s/filter/', $this->integration->getApiUrl(), $appId),
-            $params,
+            sprintf('%s/item/app/%s/filter/', $this->integration->getApiUrl(), $this->integration->getContactsAppId()),
+            null,
             'POST',
             ['encode_parameters' => 'json']
         );
