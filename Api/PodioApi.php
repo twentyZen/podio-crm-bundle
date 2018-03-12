@@ -16,16 +16,19 @@ class PodioApi extends CrmApi
 {
 
     /**
-     * @var PodioIntegration
+     * @var PodioIntegration $integration
      */
     protected $integration;
 
-    public function getLeadFields($object = 'contacts')
+    public function getLeadFields($object = 'lead')
     {
         if ($object == 'company') {
             $appId = $this->integration->getCompaniesAppId();
-        } else {
+        } else if ($object == 'contacts') {
             $appId = $this->integration->getContactsAppId();
+        } else {
+
+            $appId = $this->integration->getLeadsAppId();
         }
 
         $request = $this->integration->makeRequest(
@@ -48,11 +51,38 @@ class PodioApi extends CrmApi
 
     public function createLead(array $data, $lead)
     {
-        return $this->updateOrCreateItem(
+        $result = [];
+        //Format data for request
+        $leadData[$this->integration->getLeadContactFieldId()] = $this->updateOrCreateItem(
             $this->integration->getContactsAppId(),
             $data,
             $lead
         );
+
+        if ($companies = $this->integration->getCompanyRepository()->getCompaniesByLeadId($lead->getId())) {
+            foreach ($companies as $company) {
+                $config['object'] = 'company';
+
+                $leadData[$this->integration->getLeadCompanyFieldId()][] = $this->updateOrCreateItem(
+                    $this->integration->getCompaniesAppId(),
+                    $this->integration->populateCompanyData($company, $config),
+                    $company
+                );
+            }
+        }
+
+        $formattedLeadData = $this->integration->formatLeadDataForCreateOrUpdate($leadData, $lead);
+
+        if ($formattedLeadData) {
+            $result = $this->integration->makeRequest(
+                sprintf('%s/item/app/%s/', $this->integration->getApiUrl(), $this->integration->getLeadsAppId()),
+                $formattedLeadData,
+                'POST',
+                ['encode_parameters' => 'json']
+            );
+        }
+
+        return !empty($result['item_id']);
     }
 
     /**
@@ -102,6 +132,47 @@ class PodioApi extends CrmApi
         return $result['items'] ?? [];
     }
 
+    public function getOrganisations($params = [])
+    {
+        $params['limit'] = 100;
+        $items =  $this->integration->makeRequest(
+            sprintf('%s/org/', $this->integration->getApiUrl()),
+            $params,
+            'get',
+            ['encode_parameters' => 'json']
+        );
+
+        return array_filter($items, function ($item) {
+            return $item['status'] == 'active';
+        });
+    }
+
+    public function getWorkspacesForOrganisation(int $org_id, $params = [])
+    {
+        return $this->integration->makeRequest(
+            sprintf('%s/space/org/%s', $this->integration->getApiUrl(), $org_id),
+            $params,
+            'get',
+            ['encode_parameters' => 'json']
+        );
+    }
+
+    public function getAppsForWorkspace(int $space_id, $params = [])
+    {
+        $params['limit'] = 100;
+        $items =  $this->integration->makeRequest(
+            sprintf('%s/app/space/%s', $this->integration->getApiUrl(), $space_id),
+            $params,
+            'get',
+            ['encode_parameters' => 'json']
+        );
+
+        return array_filter($items, function ($item) {
+            return $item['status'] == 'active';
+        });
+
+    }
+
     protected function updateOrCreateItem($appId, $data, $item)
     {
         $itemId = is_array($item) ? $item['id'] : $item->getId();
@@ -131,7 +202,8 @@ class PodioApi extends CrmApi
                 ['encode_parameters' => 'json']
             );
 
-            return $postResult['item_id'];
+            return $postResult['item_id'] ?? null;
         }
+
     }
 }
