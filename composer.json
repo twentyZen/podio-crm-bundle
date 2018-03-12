@@ -1,5 +1,5 @@
 {
-    "name": "twentyzen/podio-crm-bundle",
+    "name": "twentyZen/podio-crm-bundle",
     "description": "Podio integration for Mautic",
     "type": "mautic-plugin",
     "require": {
