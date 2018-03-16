@@ -1,11 +1,12 @@
 <?php
+
 /**
- * @copyright 2016 Mautic Contributors. All rights reserved/
- * @author Mautic
+ * @copyright   2018 twentyZen. All rights reserved
+ * @author      Robert Juzak
  *
- * @link http://mautic.org
+ * @link        https://twentyzen.com
  *
- * @license GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
+ * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 
 namespace MauticPlugin\PodioCrmBundle\Integration;
@@ -24,38 +25,7 @@ class PodioIntegration extends CrmAbstractIntegration
     protected $organizations;
     protected $workspaces;
     protected $apps;
-    /**
-     * Get array key for clientId.
-     *
-     * @return string
-     */
-    public function getClientIdKey()
-    {
-        return 'client_id';
-    }
 
-    /**
-     * Get array key for client secret.
-     *
-     * @return string
-     */
-    public function getClientSecretKey()
-    {
-        return 'client_secret';
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @return array
-     */
-    public function getRequiredKeyFields()
-    {
-        return [
-            'client_id' => 'mautic.integration.keyfield.consumerid',
-            'client_secret' => 'mautic.integration.keyfield.consumersecret',
-        ];
-    }
 
     /**
      * Get key for the refresh token and expiry.
@@ -63,9 +33,12 @@ class PodioIntegration extends CrmAbstractIntegration
      *
      * @return array
      */
-    public function getRefreshToken()
+    public function getRefreshTokenKeys()
     {
-        return ['refresh_token', ''];
+        return [
+            'refresh_token',
+            'expires_in',
+        ];
     }
 
     /**
@@ -105,6 +78,31 @@ class PodioIntegration extends CrmAbstractIntegration
     }
 
     /**
+     * Get the API helper.
+     *
+     * @return PodioApi
+     */
+    public function getApiHelper()
+    {
+        if (empty($this->helper)) {
+            $class = '\\MauticPlugin\\PodioCrmBundle\\Api\\' . $this->getName() . 'Api';
+            $this->helper = new $class($this);
+        }
+
+        return $this->helper;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        return 'Podio';
+    }
+
+    /**
      * {@inheritdoc}
      *
      * @param bool $inAuthorization
@@ -116,16 +114,6 @@ class PodioIntegration extends CrmAbstractIntegration
         }
 
         return false;
-    }
-
-    /**
-     * Get array key for auth token.
-     *
-     * @return string
-     */
-    public function getAuthTokenKey()
-    {
-        return 'access_token';
     }
 
     /**
@@ -143,32 +131,10 @@ class PodioIntegration extends CrmAbstractIntegration
         return ['push_lead'];
     }
 
-    /**
-     * Get available company fields for choices in the config UI.
-     *
-     * @param array $settings
-     *
-     * @return array
-     */
-    public function getFormCompanyFields($settings = [])
-    {
-        return $this->getFormFieldsByObject('company', $settings);
-    }
-
-    /**
-     * @param array $settings
-     *
-     * @return array|mixed
-     */
-    public function getFormLeadFields($settings = [])
-    {
-        return $this->getFormFieldsByObject('contacts', $settings);
-    }
-
-    public function getFormLeadAppFields($settings = [])
-    {
-        return $this->getFormFieldsByObject('lead', $settings);
-    }
+//    public function getFormTemplate()
+//    {
+//        return 'PodioCrmBundle:Integration:form.html.php';
+//    }
 
     public function getOrganisationId()
     {
@@ -220,20 +186,10 @@ class PodioIntegration extends CrmAbstractIntegration
         return null;
     }
 
-
-//    /**
-//     * @return array
-//     */
-//    public function getLeadsAppId()
+//    public function getSynchronizationTag($default = 'sync2mautic')
 //    {
-//        return $this->keys['leads_app_id'] ?? null;
+//        return $this->keys['synchronization_tag'] ?? $default;
 //    }
-//
-
-    public function getSynchronizationTag($default = 'sync2mautic')
-    {
-        return $this->keys['synchronization_tag'] ?? $default;
-    }
 
     /**
      * Format the lead data to the structure that Podio requires for the createOrUpdate request.
@@ -266,89 +222,89 @@ class PodioIntegration extends CrmAbstractIntegration
      */
     public function appendToForm(&$builder, $data, $formArea)
     {
-        if ($formArea == 'keys') {
+//        if ($formArea == 'keys') {
 
-            $builder->add(
-                'organisation_id',
-                'choice',
-                [
-                    'choices' => $this->getAvailableOrganisations(),
-                    'label' => 'mautic.podio.organisation',
-                    'label_attr' => ['class' => 'control-label'],
-                    'required' => true,
-//                    'attr'       => [
-//                        'class'    => 'form-control',
-//                        'onchange' => 'Mautic.getIntegrationConfig(this);',
-//                    ],
-                ]
-            );
-            if ($this->getOrganisationId()) {
-                $builder->add(
-                    'contacts_app_id',
-                    'choice',
-                    [
-                        'choices' => $this->getAvailableApps(),
-                        'label' => 'mautic.podio.app.contacts',
-                        'label_attr' => ['class' => 'control-label'],
-                        'attr' => ['class' => 'form-control'],
-                        'required' => true,
-                    ]
-                );
-            }
-            if ($this->getOrganisationId()) {
-                $builder->add(
-                    'companies_app_id',
-                    'choice',
-                    [
-                        'choices' => $this->getAvailableApps(),
-                        'label' => 'mautic.podio.app.companies',
-                        'label_attr' => ['class' => 'control-label'],
-                        'required' => true,
-                    ]
-                );
-            }
-            if ($this->getOrganisationId()) {
-                $builder->add(
-                    'leads_app_id',
-                    'choice',
-                    [
-                        'choices' => $this->getAvailableApps(),
-                        'label' => 'mautic.podio.app.leads',
-                        'label_attr' => ['class' => 'control-label'],
-                        'required' => false,
-                    ]
-                );
-            }
-
-            if ($this->getLeadsAppId()) {
-                $settings['ignore_field_cache'] = true;
-                $settings['feature_settings']['objects']['lead'] = 'lead';
-                $builder->add(
-                    'lead_contact_field_id',
-                    'choice',
-                    [
-                        'choices' => $this->getAvailableLeadFields($settings)['lead'] ?? [],
-                        'label' => 'mautic.podio.app.lead_contact_field',
-                        'label_attr' => ['class' => 'control-label'],
-                        'required' => true,
-                    ]
-                );
-            }
-
-            if ($this->getLeadsAppId()) {
-                $settings['ignore_field_cache'] = true;
-                $settings['feature_settings']['objects']['lead'] = 'lead';
-                $builder->add(
-                    'lead_company_field_id',
-                    'choice',
-                    [
-                        'choices' => $this->getAvailableLeadFields($settings)['lead'] ?? [],
-                        'label' => 'mautic.podio.app.lead_company_field',
-                        'label_attr' => ['class' => 'control-label'],
-                        'required' => true,
-                    ]
-                );
-            }
+//            $builder->add(
+//                'organisation_id',
+//                'choice',
+//                [
+//                    'choices' => $this->getAvailableOrganisations(),
+//                    'label' => 'mautic.podio.organisation',
+//                    'label_attr' => ['class' => 'control-label'],
+//                    'required' => true,
+////                    'attr'       => [
+////                        'class'    => 'form-control',
+////                        'onchange' => 'Mautic.getIntegrationConfig(this);',
+////                    ],
+//                ]
+//            );
+//            if ($this->getOrganisationId()) {
+//                $builder->add(
+//                    'contacts_app_id',
+//                    'choice',
+//                    [
+//                        'choices' => $this->getAvailableApps(),
+//                        'label' => 'mautic.podio.app.contacts',
+//                        'label_attr' => ['class' => 'control-label'],
+//                        'attr' => ['class' => 'form-control'],
+//                        'required' => true,
+//                    ]
+//                );
+//            }
+//            if ($this->getOrganisationId()) {
+//                $builder->add(
+//                    'companies_app_id',
+//                    'choice',
+//                    [
+//                        'choices' => $this->getAvailableApps(),
+//                        'label' => 'mautic.podio.app.companies',
+//                        'label_attr' => ['class' => 'control-label'],
+//                        'required' => true,
+//                    ]
+//                );
+//            }
+//            if ($this->getOrganisationId()) {
+//                $builder->add(
+//                    'leads_app_id',
+//                    'choice',
+//                    [
+//                        'choices' => $this->getAvailableApps(),
+//                        'label' => 'mautic.podio.app.leads',
+//                        'label_attr' => ['class' => 'control-label'],
+//                        'required' => false,
+//                    ]
+//                );
+//            }
+//
+//            if ($this->getLeadsAppId()) {
+//                $settings['ignore_field_cache'] = true;
+//                $settings['feature_settings']['objects']['lead'] = 'lead';
+//                $builder->add(
+//                    'lead_contact_field_id',
+//                    'choice',
+//                    [
+//                        'choices' => $this->getAvailableLeadFields($settings)['lead'] ?? [],
+//                        'label' => 'mautic.podio.app.lead_contact_field',
+//                        'label_attr' => ['class' => 'control-label'],
+//                        'required' => true,
+//                    ]
+//                );
+//            }
+//
+//            if ($this->getLeadsAppId()) {
+//                $settings['ignore_field_cache'] = true;
+//                $settings['feature_settings']['objects']['lead'] = 'lead';
+//                $builder->add(
+//                    'lead_company_field_id',
+//                    'choice',
+//                    [
+//                        'choices' => $this->getAvailableLeadFields($settings)['lead'] ?? [],
+//                        'label' => 'mautic.podio.app.lead_company_field',
+//                        'label_attr' => ['class' => 'control-label'],
+//                        'required' => true,
+//                    ]
+//                );
+//            }
 //            $builder->add(
 //                'leads_app_id',
 //                'text',
@@ -359,7 +315,7 @@ class PodioIntegration extends CrmAbstractIntegration
 //                    'required'   => false,
 //                ]
 //            );
-        }
+//        }
 
         if ($formArea == 'features') {
 
@@ -373,7 +329,8 @@ class PodioIntegration extends CrmAbstractIntegration
                     ],
                     'expanded' => true,
                     'multiple' => true,
-                    'label' => $this->getTranslator()->trans('mautic.crm.form.objects_to_pull_from', ['%crm%' => 'Podio']),
+                    'label' => $this->getTranslator()->trans('mautic.crm.form.objects_to_pull_from',
+                        ['%crm%' => 'Podio']),
                     'label_attr' => ['class' => ''],
                     'empty_value' => false,
                     'required' => false,
@@ -385,26 +342,6 @@ class PodioIntegration extends CrmAbstractIntegration
 //                'text',
 //                [
 //                    'label'      => 'mautic.podio.app.synchronization_tag',
-//                    'label_attr' => ['class' => 'control-label'],
-//                    'attr'       => ['class' => 'form-control'],
-//                    'required'   => false,
-//                ]
-//            );
-//            $builder->add(
-//                'contact_field_external_id',
-//                'text',
-//                [
-//                    'label'      => 'mautic.podio.app.contact_field_external_id',
-//                    'label_attr' => ['class' => 'control-label'],
-//                    'attr'       => ['class' => 'form-control'],
-//                    'required'   => false,
-//                ]
-//            );
-//            $builder->add(
-//                'company_field_external_id',
-//                'text',
-//                [
-//                    'label'      => 'mautic.podio.app.company_field_external_id',
 //                    'label_attr' => ['class' => 'control-label'],
 //                    'attr'       => ['class' => 'form-control'],
 //                    'required'   => false,
@@ -600,31 +537,6 @@ class PodioIntegration extends CrmAbstractIntegration
     }
 
 
-    /**
-     * Get the API helper.
-     *
-     * @return PodioApi
-     */
-    public function getApiHelper()
-    {
-        if (empty($this->helper)) {
-            $class = '\\MauticPlugin\\PodioCrmBundle\\Api\\' . $this->getName() . 'Api';
-            $this->helper = new $class($this);
-        }
-
-        return $this->helper;
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * @return string
-     */
-    public function getName()
-    {
-        return 'Podio';
-    }
-
     public function populateCompanyData($lead, $config = [])
     {
         if (!isset($config['companyFields'])) {
@@ -730,7 +642,7 @@ class PodioIntegration extends CrmAbstractIntegration
 
     }
 
-    protected function getCompanyRepository()
+    public function getCompanyRepository()
     {
         return $this->em->getRepository('MauticLeadBundle:Company');
     }

@@ -1,9 +1,12 @@
 <?php
+
 /**
- * Created by IntelliJ IDEA.
- * User: robjuz
- * Date: 24/03/2017
- * Time: 14:53.
+ * @copyright   2018 twentyZen. All rights reserved
+ * @author      Robert Juzak
+ *
+ * @link        https://twentyzen.com
+ *
+ * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 
 namespace MauticPlugin\PodioCrmBundle\Api;
