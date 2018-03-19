@@ -140,10 +140,10 @@ class PodioIntegration extends CrmAbstractIntegration
         return ['push_lead'];
     }
 
-//    public function getFormTemplate()
-//    {
-//        return 'PodioCrmBundle:Integration:form.html.php';
-//    }
+    public function getFormTemplate()
+    {
+        return 'PodioCrmBundle:Integration:form.html.php';
+    }
 
     public function getOrganisationId()
     {
@@ -226,46 +226,44 @@ class PodioIntegration extends CrmAbstractIntegration
                         'label' => 'mautic.podio.organisation',
                         'label_attr' => ['class' => 'control-label'],
                         'required' => true,
-//                    'attr'       => [
-//                        'class'    => 'form-control',
-//                        'onchange' => 'Mautic.getIntegrationConfig(this);',
-//                    ],
+                        'attr' => [
+                            'class' => 'form-control',
+                            'onchange' => 'Mautic.podioCrmUpdateOrganisation(this);',
+                        ],
                     ]
                 );
-            }
-            if ($this->getOrganisationId()) {
+
+                $apps = $this->getOrganisationId() ? $this->getAvailableApps() : [];
                 $builder->add(
                     'contacts_app_id',
                     'choice',
                     [
-                        'choices' => $this->getAvailableApps(),
+                        'choices' => $apps,
                         'label' => 'mautic.podio.app.contacts',
                         'label_attr' => ['class' => 'control-label'],
                         'attr' => ['class' => 'form-control'],
                         'required' => true,
                     ]
                 );
-            }
-            if ($this->getOrganisationId()) {
                 $builder->add(
                     'companies_app_id',
                     'choice',
                     [
-                        'choices' => $this->getAvailableApps(),
+                        'choices' => $apps,
                         'label' => 'mautic.podio.app.companies',
                         'label_attr' => ['class' => 'control-label'],
-                        'required' => true,
+                        'attr' => ['class' => 'form-control'],
+                        'required' => false,
                     ]
                 );
-            }
-            if ($this->getOrganisationId()) {
                 $builder->add(
                     'leads_app_id',
                     'choice',
                     [
-                        'choices' => $this->getAvailableApps(),
+                        'choices' => $apps,
                         'label' => 'mautic.podio.app.leads',
                         'label_attr' => ['class' => 'control-label'],
+                        'attr' => ['class' => 'form-control'],
                         'required' => false,
                     ]
                 );
@@ -274,24 +272,24 @@ class PodioIntegration extends CrmAbstractIntegration
 
         if ($formArea == 'features') {
 
-//            $builder->add(
-//                'objects',
-//                'choice',
-//                [
-//                    'choices' => [
+            $builder->add(
+                'objects',
+                'choice',
+                [
+                    'choices' => [
 //                        'contacts' => 'mautic.podio.object.contact',
-//                        'company' => 'mautic.podio.object.company',
+                        'company' => 'mautic.podio.object.company',
 //                        'leads' => 'mautic.podio.object.leads',
-//                    ],
-//                    'expanded' => true,
-//                    'multiple' => true,
-//                    'label' => $this->getTranslator()->trans('mautic.crm.form.objects_to_pull_from',
-//                        ['%crm%' => 'Podio']),
-//                    'label_attr' => ['class' => ''],
-//                    'empty_value' => false,
-//                    'required' => false,
-//                ]
-//            );
+                    ],
+                    'expanded' => true,
+                    'multiple' => true,
+                    'label' => $this->getTranslator()->trans('mautic.crm.form.objects_to_pull_from',
+                        ['%crm%' => 'Podio']),
+                    'label_attr' => ['class' => ''],
+                    'empty_value' => false,
+                    'required' => false,
+                ]
+            );
 
 
             if ($this->getLeadsAppId()) {
@@ -420,7 +418,8 @@ class PodioIntegration extends CrmAbstractIntegration
                     isset($podioLead['item_id']) AND
                     !empty($podioLead['item_id'])
                 ) {
-                    $this->getApiHelper()->addCommentToItem($podioLead['item_id'], $config['config']['push_to_podio_message']);
+                    $this->getApiHelper()->addCommentToItem($podioLead['item_id'],
+                        $config['config']['push_to_podio_message']);
                 }
             }
         }
@@ -616,13 +615,13 @@ class PodioIntegration extends CrmAbstractIntegration
         return [];
     }
 
-    protected function getAvailableApps($settings = [])
+    public function getAvailableApps($settings = [])
     {
         if ($this->apps) {
             return $this->apps;
         }
 
-        $workspaces = $this->getAvailableWorkspaces();
+        $workspaces = $this->getAvailableWorkspaces($settings);
         $podioApps = [];
 
         $silenceExceptions = (isset($settings['silence_exceptions'])) ? $settings['silence_exceptions'] : true;
@@ -681,9 +680,12 @@ class PodioIntegration extends CrmAbstractIntegration
             return $this->workspaces;
         }
 
-        $organisationId = $this->getOrganisationId();
+        if (isset($settings['organisation_id']) AND !empty($settings['organisation_id'])) {
+            $organisationId = $settings['organisation_id'];
+        } else {
+            $organisationId = $this->getOrganisationId();
+        }
         $podioWorkspaces = [];
-
 
         if (!$organisationId) {
             return $podioWorkspaces;

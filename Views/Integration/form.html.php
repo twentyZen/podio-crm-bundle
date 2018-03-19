@@ -8,6 +8,9 @@
  *
  * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
+
+echo $view['assets']->includeScript('plugins/PodioCrmBundle/Assets/js/podiocrm.js');
+
 if (!$hasSupportedFeatures = (isset($form['supportedFeatures']) && count($form['supportedFeatures']))) {
     if (isset($form['supportedFeatures'])) {
         $form['supportedFeatures']->setRendered();
