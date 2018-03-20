@@ -23,18 +23,8 @@ class PodioApi extends CrmApi
      */
     protected $integration;
 
-    public function getLeadFields($object = 'contacts')
+    public function getLeadFields($appId)
     {
-        if ($object == 'company') {
-            $appId = $this->integration->getCompaniesAppId();
-        } else {
-            if ($object == 'lead') {
-                $appId = $this->integration->getLeadsAppId();
-            } else {
-                $appId = $this->integration->getContactsAppId();
-            }
-        }
-
         $request = $this->integration->makeRequest(
             sprintf('%s/app/%s', $this->integration->getApiUrl(), $appId)
         );

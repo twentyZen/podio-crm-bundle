@@ -1,8 +1,6 @@
 /* PodioCrmBundle */
 Mautic.podioCrmUpdateOrganisation = function (el) {
-    Mautic.activateLabelLoadingIndicator('#integration_details_apiKeys_contacts_app_id');
-    Mautic.activateLabelLoadingIndicator('#integration_details_apiKeys_companies_app_id');
-    Mautic.activateLabelLoadingIndicator('#integration_details_apiKeys_leads_app_id');
+    Mautic.activateLabelLoadingIndicator(mQuery(el).attr('id'));
 
     var contactsAppField = mQuery('#integration_details_apiKeys_contacts_app_id');
     var companiesAppField = mQuery('#integration_details_apiKeys_companies_app_id');
@@ -53,4 +51,3 @@ Mautic.podioCrmUpdateOrganisation = function (el) {
         }
     );
 };
-

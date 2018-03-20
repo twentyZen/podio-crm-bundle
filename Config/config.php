@@ -12,6 +12,6 @@
 return [
     'name'        => 'Podio as CRM',
     'description' => 'Podio as CRM',
-    'version'     => '0.5.1',
+    'version'     => '0.6.0',
     'author'      => 'robjuz'
 ];
