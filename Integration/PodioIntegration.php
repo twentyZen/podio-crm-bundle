@@ -159,7 +159,7 @@ class PodioIntegration extends CrmAbstractIntegration
      */
     public function getOrganisationId()
     {
-        return $this->keys['organisation_id'] ?: null;
+        return isset($this->keys['organisation_id']) ? $this->keys['organisation_id'] : null;
     }
 
     /**

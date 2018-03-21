@@ -32,6 +32,10 @@ class PodioApi extends CrmApi
      */
     public function getLeadFields($appId)
     {
+        if (!$appId) {
+            return [];
+        }
+
         $request = $this->integration->makeRequest(
             sprintf('%s/app/%s', $this->integration->getApiUrl(), $appId)
         );
