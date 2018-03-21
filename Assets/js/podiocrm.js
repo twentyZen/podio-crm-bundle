@@ -7,8 +7,10 @@ Mautic.podioCrmUpdateOrganisation = function (el) {
     var leadsAppField = mQuery('#integration_details_apiKeys_leads_app_id');
 
     var chosenOptions = {
+        width: "100%",
+        allow_single_deselect: true,
         include_group_label_in_selected: true,
-        width: '100%'
+        search_contains: true
     };
 
 
