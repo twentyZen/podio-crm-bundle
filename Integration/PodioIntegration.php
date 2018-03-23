@@ -166,7 +166,7 @@ class PodioIntegration extends CrmAbstractIntegration
      * @param $id
      * @return PodioIntegration
      */
-    public function setOrganisationIf($id)
+    public function setOrganisationId($id)
     {
         $this->encryptAndSetApiKeys(['organisation_id' => $id], $this->getIntegrationSettings());
 
