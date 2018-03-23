@@ -89,15 +89,22 @@ class PodioApi extends CrmApi
     }
 
     /**
-     * @param $space_id
+     * @param $org_id
      * @param array $params
      * @return array|mixed|string
      */
-    public function getAppsForWorkspace($space_id, $params = [])
+    public function getAppsForOrganisation($org_id, $params = [])
     {
-        $params['limit'] = 100;
+        $params = array_merge($params,[
+            'limit' => 100,
+            'exclude_demo' => true,
+            'referenceable_in_org' => $org_id,
+            'right' => 'add_item',
+            'fields' => 'space.view(full)'
+        ]);
+
         $items = $this->integration->makeRequest(
-            sprintf('%s/app/space/%s', $this->integration->getApiUrl(), $space_id),
+            sprintf('%s/app', $this->integration->getApiUrl()),
             $params,
             'get',
             ['encode_parameters' => 'json']

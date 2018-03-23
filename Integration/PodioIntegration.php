@@ -754,20 +754,19 @@ class PodioIntegration extends CrmAbstractIntegration
             $this->setOrganisationId($settings['organisation_id']);
         }
 
-        $workspaces = $this->getAvailableWorkspaces($settings);
+        $organisationId = $this->getOrganisationId();
         $podioApps = [];
 
-        if (!$workspaces) {
+        if (!$organisationId) {
             return $podioApps;
         }
 
         try {
-            foreach ($workspaces as $workspaceId => $workspaceName) {
-                $apps = $this->getApiHelper()->getAppsForWorkspace($workspaceId);
+                $apps = $this->getApiHelper()->getAppsForOrganisation($organisationId);
                 foreach ($apps as $app) {
-                    $podioApps[$workspaceName][$app['app_id']] = $app['config']['name'];
+                    $workspace = $app['space'];
+                    $podioApps[$workspace['name']][$app['app_id']] = $app['config']['name'];
                 }
-            }
         } catch (\Exception $e) {
             $this->logIntegrationError($e);
 
@@ -825,31 +824,6 @@ class PodioIntegration extends CrmAbstractIntegration
      * @return array
      * @throws \Exception
      */
-    protected function getAvailableWorkspaces($settings = [])
-    {
-        $organisationId = $this->getOrganisationId();
-        $podioWorkspaces = [];
-
-        if (!$organisationId) {
-            return $podioWorkspaces;
-        }
-
-        try {
-            $workspaces = $this->getApiHelper()->getWorkspacesForOrganisation($organisationId);
-            foreach ($workspaces as $workspace) {
-                $podioWorkspaces[$workspace['space_id']] = $workspace['name'];
-            }
-        } catch (\Exception $e) {
-            $this->logIntegrationError($e);
-
-            $silenceExceptions = (isset($settings['silence_exceptions'])) ? $settings['silence_exceptions'] : true;
-            if (!$silenceExceptions) {
-                throw $e;
-            }
-        }
-
-        return $podioWorkspaces;
-    }
 
     /**
      * @param int $leadId
