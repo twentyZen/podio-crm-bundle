@@ -73,7 +73,7 @@ class PodioIntegration extends CrmAbstractIntegration
      */
     public function getAuthScope()
     {
-        return 'api refresh_token';
+        return 'global:all';
     }
 
     /**
