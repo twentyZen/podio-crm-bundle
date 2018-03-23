@@ -149,6 +149,17 @@ class PodioApi extends CrmApi
         );
     }
 
+    public function createEmbed($url, $attributes = [])
+    {
+        $attributes['url'] = $url;
+        return $this->integration->makeRequest(
+            sprintf('%s/embed/', $this->integration->getApiUrl()),
+            $attributes,
+            'POST',
+            ['encode_parameters' => 'json']
+        );
+    }
+
     /**
      * @param int $itemId
      * @param string $comment

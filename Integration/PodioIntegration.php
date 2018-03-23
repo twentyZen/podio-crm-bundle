@@ -32,7 +32,8 @@ class PodioIntegration extends CrmAbstractIntegration
         'number',
         'text',
         'email',
-        'phone'
+        'phone',
+        'embed'
     ];
 
     /**
@@ -262,7 +263,7 @@ class PodioIntegration extends CrmAbstractIntegration
     {
         if ($this->getLeadsAppId()) {
             $featureSettings = $this->settings->getFeatureSettings();
-            return isset($featureSettings['lead_company_field_id']) ? featureSettings['lead_company_field_id'] : null;
+            return isset($featureSettings['lead_company_field_id']) ? $featureSettings['lead_company_field_id'] : null;
         }
 
         return null;
@@ -423,7 +424,7 @@ class PodioIntegration extends CrmAbstractIntegration
                     'lead_company_field_id',
                     'choice',
                     [
-                        'choices' => $this->getFormFieldsByObject('lead'),
+                        'choices' => $this->getAvailableLeadAppFields(),
                         'label' => 'mautic.podio.app.lead_company_field',
                         'label_attr' => ['class' => 'control-label'],
                         'required' => false,
@@ -558,7 +559,7 @@ class PodioIntegration extends CrmAbstractIntegration
      * @return array
      * @throws \Exception
      */
-    public function populateLadData($lead, $config = [])
+    public function populateLeadData($lead, $config = [])
     {
         $config['config']['object'] = $this->getContactsAppId();
         if (!isset($config['leadFields'])) {
@@ -569,6 +570,7 @@ class PodioIntegration extends CrmAbstractIntegration
             }
         }
 
+        $config['cache_suffix'] = '.' . $config['object'];
         return $this->populateData($lead, $config['leadFields'], $config);
     }
 
@@ -650,6 +652,21 @@ class PodioIntegration extends CrmAbstractIntegration
                 case 'money':
                     $data['fields'][$podioFieldKey]['value'] = intval($value);
                     break;
+                case 'embed' :
+                    $embed = $this->getApiHelper()->createEmbed($value);
+                    if (isset($embed['embed_id'])) {
+                        $data['fields'][$podioFieldKey]['embed'] = $embed['embed_id'];
+                    }
+
+                    if (!isset($embed['files'])) {
+                        break;
+                    }
+
+                    if (isset($embed['files'][0])) {
+                        $data['fields'][$podioFieldKey]['file'] = $embed['files'][0]['file_id'];
+                    }
+
+                    break;
             }
         }
 
@@ -671,7 +688,7 @@ class PodioIntegration extends CrmAbstractIntegration
         if (isset($settings['feature_settings']['objects'])) {
             $podioObjects = $settings['feature_settings']['objects'];
         } else {
-            $podioObjects[] = [$this->getContactsAppId() => 'contacts'];
+            $podioObjects = [$this->getContactsAppId() => 'contacts'];
         }
 
         if (empty($podioObjects) or !is_array($podioObjects)) {
@@ -852,5 +869,18 @@ class PodioIntegration extends CrmAbstractIntegration
         } catch (\Exception $e) {
             return false;
         }
+    }
+
+    /**
+     * Called in extractAuthKeys before key comparison begins to give opportunity to set expiry, rename keys, etc.
+     *
+     * @param $data
+     *
+     * @return mixed
+     */
+    public function prepareResponseForExtraction($data)
+    {
+        $data['expires_in'] += time();
+        return $data;
     }
 }
