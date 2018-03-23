@@ -605,7 +605,7 @@ class PodioIntegration extends CrmAbstractIntegration
      */
     protected function populateData($lead, $fieldsMapping, $config)
     {
-        $mauticFields = $lead->getFields(true);
+        $mauticFields = is_array($lead) ? $lead : $lead->getFields(true);
         $podioFields = $this->getAvailableLeadFields($config);
 
         $data = [

@@ -129,8 +129,9 @@ class PodioApi extends CrmApi
         }
 
         if ($mauticItem) {
+            $mauticItemId = strval(is_array($mauticItem) ? $mauticItem['id'] : $mauticItem->getId());
             $getResult = $this->integration->makeRequest(
-                sprintf('%s/item/app/%s/external_id/%s/', $this->integration->getApiUrl(), $appId, $mauticItem->getId())
+                sprintf('%s/item/app/%s/external_id/%s/', $this->integration->getApiUrl(), $appId, $mauticItemId)
             );
 
             if (!empty($getResult['item_id'])) {
@@ -143,7 +144,7 @@ class PodioApi extends CrmApi
                 );
 
                 return $this->integration->makeRequest(
-                    sprintf('%s/item/app/%s/external_id/%s/', $this->integration->getApiUrl(), $appId, $mauticItem->getId())
+                    sprintf('%s/item/app/%s/external_id/%s/', $this->integration->getApiUrl(), $appId, $mauticItemId)
                 );
             }
         }
