@@ -494,15 +494,10 @@ class PodioIntegration extends CrmAbstractIntegration
 
         $leadCompanyFieldId = $this->getLeadCompanyFieldId();
         if ($leadCompanyFieldId) {
-            $podioContactCompanies = array_filter($podioContact['fields'],
-                function ($field) use ($leadCompanyFieldId) {
-                    return $field['external_id'] == $leadCompanyFieldId;
-                });
-            foreach ($podioContactCompanies as $podioContactCompany) {
-                foreach ($podioContactCompany['values'] as $value) {
-                    if (isset($value['value']['item_id'])) {
-                        $leadData['fields'][$leadCompanyFieldId][] = $value['value']['item_id'];
-                    }
+            $podioCompanies = $this->pushCompanies($mauticLead, $config);
+            foreach ($podioCompanies as $value) {
+                if (isset($value['item_id'])) {
+                    $leadData['fields'][$leadCompanyFieldId][] = $value['item_id'];
                 }
             }
         }
@@ -582,8 +577,7 @@ class PodioIntegration extends CrmAbstractIntegration
      */
     public function populateCompanyData($lead, $config = [])
     {
-        $config['config']['object'] = $this->getContactsAppId();
-        $config['object'] = 'company';
+        $config['object'] = $config['config']['object'] = $this->getCompaniesAppId();
         if (!isset($config['companyFields'])) {
             $config = $this->mergeConfigToFeatureSettings($config);
 
@@ -762,11 +756,11 @@ class PodioIntegration extends CrmAbstractIntegration
         }
 
         try {
-                $apps = $this->getApiHelper()->getAppsForOrganisation($organisationId);
-                foreach ($apps as $app) {
-                    $workspace = $app['space'];
-                    $podioApps[$workspace['name']][$app['app_id']] = $app['config']['name'];
-                }
+            $apps = $this->getApiHelper()->getAppsForOrganisation($organisationId);
+            foreach ($apps as $app) {
+                $workspace = $app['space'];
+                $podioApps[$workspace['name']][$app['app_id']] = $app['config']['name'];
+            }
         } catch (\Exception $e) {
             $this->logIntegrationError($e);
 
