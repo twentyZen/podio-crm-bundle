@@ -408,7 +408,7 @@ class PodioIntegration extends CrmAbstractIntegration
             );
 
 
-            if ($this->getLeadsAppId()) {
+            if ($this->isAuthorized() && $this->getLeadsAppId()) {
                 $builder->add(
                     'lead_contact_field_id',
                     'choice',
