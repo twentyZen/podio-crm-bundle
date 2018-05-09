@@ -12,9 +12,9 @@
 namespace MauticPlugin\PodioCrmBundle\Api;
 
 use Mautic\LeadBundle\Entity\Company;
+use Mautic\LeadBundle\Entity\Lead;
 use Mautic\PluginBundle\Exception\ApiErrorException;
 use MauticPlugin\MauticCrmBundle\Api\CrmApi;
-use MauticPlugin\MauticSocialBundle\Entity\Lead;
 use MauticPlugin\PodioCrmBundle\Integration\PodioIntegration;
 
 class PodioApi extends CrmApi
@@ -117,22 +117,37 @@ class PodioApi extends CrmApi
     }
 
     /**
-     * @param int $appId
-     * @param array $data
+     * @param int          $appId
+     * @param array        $data
      * @param Company|Lead $mauticItem
+     * @param array        $options
      * @return bool|mixed|string
      */
-    public function updateOrCreateItem($appId, $data, $mauticItem = null)
+    public function updateOrCreateItem($appId, $data, $mauticItem = null, $options = [])
     {
         if (!$appId) {
             return false;
         }
 
+        //try to update existing item
         if ($mauticItem) {
+            //first try by podio external_id
             $mauticItemId = strval(is_array($mauticItem) ? $mauticItem['id'] : $mauticItem->getId());
             $getResult = $this->integration->makeRequest(
                 sprintf('%s/item/app/%s/external_id/%s/', $this->integration->getApiUrl(), $appId, $mauticItemId)
             );
+
+            if (empty($getResult['item_id']) AND !empty($options)) {
+                //try by podio title
+                $getResults = $this->integration->makeRequest(
+                    sprintf('%s/item/app/%s/filter', $this->integration->getApiUrl(), $appId),
+                    $options,
+                    'POST',
+                    ['encode_parameters' => 'json']
+                );
+
+                $getResult = isset($getResults['items'][0]) ? $getResults['items'][0] : [];
+            }
 
             if (!empty($getResult['item_id'])) {
 

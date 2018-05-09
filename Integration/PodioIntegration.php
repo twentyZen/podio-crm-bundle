@@ -473,10 +473,20 @@ class PodioIntegration extends CrmAbstractIntegration
      */
     public function pushLead($mauticLead, $config = [])
     {
+        $podioEmailField = $this->getPodioContactEmailFieldId();
+        if ($podioEmailField) {
+            $options = [
+                'filters' => [
+                    $podioEmailField => [$mauticLead->getEmail()]
+                ],
+                'limit' => 1
+            ];
+        }
         $podioContact = $this->getApiHelper()->updateOrCreateItem(
             $this->getContactsAppId(),
             $this->populateLeadData($mauticLead, $config),
-            $mauticLead
+            $mauticLead,
+            $options
         );
 
         $leadData = [
@@ -538,10 +548,21 @@ class PodioIntegration extends CrmAbstractIntegration
         }
 
         foreach ($companies as $company) {
+            $companyData = $this->populateCompanyData($company, $config);
+            $options = [];
+            if (!empty($company['companyname'])) {
+               $options =  [
+                    'filters' => [
+                        'title' => $company['companyname']
+                    ],
+                   'limit' => 1
+                ];
+            }
             $podioCompanies[] = $this->getApiHelper()->updateOrCreateItem(
                 $this->getCompaniesAppId(),
-                $this->populateCompanyData($company, $config),
-                $company
+                $companyData,
+                $company,
+                $options
             );
         }
 
@@ -567,6 +588,19 @@ class PodioIntegration extends CrmAbstractIntegration
 
         $config['cache_suffix'] = '.' . $config['object'];
         return $this->populateData($lead, $config['leadFields'], $config);
+    }
+
+    protected function getPodioContactEmailFieldId()
+    {
+        $config['config']['object'] = $this->getContactsAppId();
+        if (!isset($config['leadFields'])) {
+            $config = $this->mergeConfigToFeatureSettings($config);
+
+            if (empty($config['leadFields'])) {
+                return null;
+            }
+        }
+        return array_search('email', $config['leadFields']);
     }
 
     /**

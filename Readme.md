@@ -1,11 +1,12 @@
 # Podio CRM Bundle
 
-This is a Mautic Plugin that allows you to use [Podio](https://podio.com/site) as CRM Integration
+This is a [Mautic](https://www.mautic.org/) Plugin that allows you to use [Podio](https://podio.com/site) as CRM Integration
 
 ## Features
 * Push contact to Podio (create new or update when already exist)
 * Push related company to Podio (create new or update when already exist)
 * Create a simple Lead, that consist of contact and company
+* Add a comment to the Lead App specified in the "push to integration" Mautic action 
 
 ## Installation
 
